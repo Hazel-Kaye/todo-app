@@ -6,8 +6,8 @@ export default function App() {
   const [textInput, setTextInput] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search text
 
-  // Function to handle adding a task or updating an existing task
   const handleAddTask = () => {
     if (!textInput.trim()) {
       Alert.alert('Error', 'Task cannot be empty');
@@ -21,17 +21,15 @@ export default function App() {
       setIsEditing(false);
       setCurrentTaskId(null);
     } else {
-      setTasks([...tasks, { id: Date.now().toString(), text: textInput, completed: false }]);
+      setTasks([...tasks, { id: Date.now().toString(), text: textInput }]);
     }
     setTextInput('');
   };
 
-  // Function to delete a task by its id
   const handleDeleteTask = (id) => {
     setTasks(tasks.filter(task => task.id !== id));
   };
 
-  // Function to start editing a task by setting its text in the input
   const handleEditTask = (id) => {
     const taskToEdit = tasks.find(task => task.id === id);
     if (taskToEdit) {
@@ -41,28 +39,20 @@ export default function App() {
     }
   };
 
-  // Function to mark a task as complete or undo it
-  const handleCompleteTask = (id) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
-  };
+  // Function to filter tasks based on the search query
+  const filteredTasks = tasks.filter(task => 
+    task.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Function to render each task in the list
   const renderTaskItem = ({ item }) => (
     <View style={styles.taskContainer}>
-      <Text style={[styles.taskText, item.completed && styles.completedTaskText]}>
-        {item.text}
-      </Text>
+      <Text style={styles.taskText}>{item.text}</Text>
       <View style={styles.taskButtons}>
         <TouchableOpacity style={styles.button} onPress={() => handleEditTask(item.id)}>
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={() => handleDeleteTask(item.id)}>
           <Text style={styles.buttonText}>Delete</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.completeButton]} onPress={() => handleCompleteTask(item.id)}>
-          <Text style={styles.buttonText}>{item.completed ? 'Undo' : 'Done'}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -81,8 +71,16 @@ export default function App() {
         <Text style={styles.addButtonText}>{isEditing ? 'Update Task' : 'Add Task'}</Text>
       </TouchableOpacity>
 
+      {/* Search input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Search tasks..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
       <FlatList
-        data={tasks}
+        data={filteredTasks} // Use filtered tasks based on search
         keyExtractor={item => item.id}
         renderItem={renderTaskItem}
         style={styles.taskList}
@@ -141,10 +139,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
   },
-  completedTaskText: {
-    textDecorationLine: 'line-through',
-    color: '#888',
-  },
   taskButtons: {
     flexDirection: 'row',
   },
@@ -156,9 +150,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: '#FF6347',
-  },
-  completeButton: {
-    backgroundColor: '#32CD32',
   },
   buttonText: {
     color: '#fff',
