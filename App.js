@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, ImageBackground } from 'react-native';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -15,19 +15,21 @@ export default function App() {
     }
 
     if (isEditing) {
-      setTasks(tasks.map(task => 
-        task.id === currentTaskId ? { ...task, text: textInput } : task
-      ));
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === currentTaskId ? { ...task, text: textInput } : task
+        )
+      );
       setIsEditing(false);
       setCurrentTaskId(null);
     } else {
-      setTasks([...tasks, { id: Date.now().toString(), text: textInput }]);
+      setTasks([...tasks, { id: Date.now().toString(), text: textInput, completed: false }]);
     }
     setTextInput('');
   };
 
   const handleDeleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
   };
 
   const handleEditTask = (id) => {
@@ -39,10 +41,12 @@ export default function App() {
     }
   };
 
-  // Function to filter tasks based on the search query
-  const filteredTasks = tasks.filter(task => 
-    task.text.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Function to mark a task as complete or undo it
+  const handleCompleteTask = (id) => {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
 
   const renderTaskItem = ({ item }) => (
     <View style={styles.taskContainer}>
@@ -51,15 +55,24 @@ export default function App() {
         <TouchableOpacity style={styles.button} onPress={() => handleEditTask(item.id)}>
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={() => handleDeleteTask(item.id)}>
+        <TouchableOpacity
+          style={[styles.button, styles.deleteButton]}
+          onPress={() => handleDeleteTask(item.id)}
+        >
           <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.completeButton]} onPress={() => handleCompleteTask(item.id)}>
+          <Text style={styles.buttonText}>{item.completed ? 'Undo' : 'Done'}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={require('./assets/background.jpg')} // Path to your image
+      style={styles.container}
+    >
       <Text style={styles.title}>To-Do List</Text>
       <TextInput
         style={styles.input}
@@ -85,22 +98,25 @@ export default function App() {
         renderItem={renderTaskItem}
         style={styles.taskList}
       />
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingTop: 50,
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 30, // Increased size for better visibility
+    fontStyle: 'italic',
+    color: '#87572d', 
     textAlign: 'center',
     marginBottom: 20,
+    textShadowColor: '#000', // Subtle shadow to enhance readability
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 100,
   },
   input: {
     height: 40,
@@ -109,16 +125,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
+    backgroundColor: '#fff', // White background for the input field
   },
   addButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#c77a4e', 
     paddingVertical: 10,
     borderRadius: 5,
     alignItems: 'center',
     marginBottom: 20,
   },
   addButtonText: {
-    color: '#fff',
+    color: '#fff', // white font inside the box
     fontSize: 16,
   },
   taskList: {
@@ -128,12 +145,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff', // color background for task containers
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
-    borderColor: '#ddd',
-    borderWidth: 1,
+    borderColor: '#dbb988',
+    borderWidth: 2,
   },
   taskText: {
     fontSize: 16,
